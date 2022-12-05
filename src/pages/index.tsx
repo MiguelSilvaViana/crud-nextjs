@@ -1,31 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import CollectionClient from "../backend/db/CollectionClient";
 import Button from "../components/Button";
 import Form from "../components/Form";
 import Layout from "../components/Layout";
 import Table from "../components/Table";
 import Client from "../core/Client";
+import ClientRepository from "../core/ClientRepository";
 
 export default function Home() {
+
+  const repo: ClientRepository = new CollectionClient()
   
   const [visible, setVisible] = useState<'table' | 'form'>('table') // 2 possiveis estados table ou form
   
   const [client, setClient] = useState<Client>(Client.void())
   
-  const clients = [
-    new Client('Ana', 34, '1'),
-    new Client('Bia', 44, '2'),
-    new Client('Miguel', 3, '3'),
-    new Client('Dog', 55, '4'),
-  ]
+  const [clients, setClients] = useState<Client[]>([])
+
+  useEffect(getall, [])
+  
+  function getall() {
+    repo.getAll().then((clients) => {
+      setClients(clients)
+      setVisible('table')
+    })
+  }
   
   function selectedClient(client: Client) {
-    console.log(client + ' selected')	
     setClient(client)
     setVisible('form')
   }
   
-  function deletedClient(client: Client) {
-    console.log(`excluir ${client.name}`)
+  async function deletedClient(client: Client) {
+    await repo.del(client)
+    getall()
   }
 
   function newClient() {
@@ -33,9 +41,9 @@ export default function Home() {
     setVisible('form')
   }
 
-  function saveClient (client: Client) {
-    console.log(client)
-    setVisible('table')
+  async function saveClient (client: Client) {
+    await repo.save(client)
+    getall()
   }
 
   
